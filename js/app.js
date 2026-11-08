@@ -10,32 +10,37 @@ const gender = document.getElementsByName('gender');
 
 
 const btnSubmit = document.getElementById('btn-submit');
-btnSubmit.addEventListener("click", () => {
+btnSubmit.addEventListener("click", async () => {
 
-    let selectedGender;
-    for (var i = 0; i < gender.length; i++) {
+    let selectedGender = null;
+    for (let i = 0; i < gender.length; i++) {
         if (gender[i].checked) {
-            selectedGender = gender[i].value;
+            selectedGender = gender[i].value.toUpperCase();
         }
     }
+
+    const ageText = txtBday.value.trim();
 
     let info = {
         "firstName": txtFirstName.value,
         "lastName": txtLastName.value,
-        "age": txtBday.value,
+        "age": ageText === "" ? null : Number(ageText),
         "email": txtEmail.value,
-        "password" : txtpw.value,
+        "password": txtpw.value,
         "institute": txtInstitute.value,
         "batch": txtBatch.value,
         "gender": selectedGender
     }
 
-    fetch("http://localhost:8080/information", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(info)
-    })
+    try {
+        const result = await apiRequest("/students", { method: "POST", body: info });
+        if (result.status === 201) {
+            alert("Registration successful. You can now log in.");
+            window.location.href = "content.html";
+        } else {
+            alert(describeApiError(result.data));
+        }
+    } catch (e) {
+        alert(SERVER_UNREACHABLE);
+    }
 })
-
