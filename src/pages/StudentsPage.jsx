@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link as RouterLink } from 'react-router'
 import Alert from '@mui/material/Alert'
-import AppBar from '@mui/material/AppBar'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
 import Container from '@mui/material/Container'
-import IconButton from '@mui/material/IconButton'
 import LinearProgress from '@mui/material/LinearProgress'
 import Paper from '@mui/material/Paper'
 import Table from '@mui/material/Table'
@@ -15,12 +12,10 @@ import TableCell from '@mui/material/TableCell'
 import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
-import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
-import LogoutIcon from '@mui/icons-material/Logout'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import { errorMessageOf, listStudents, SERVER_UNREACHABLE } from '../api/client.js'
-import background from '../assets/pexels-mikael-blomkvist-6476588.jpg'
+import AppShell from '../components/AppShell.jsx'
 
 const COLUMNS = [
   ['id', 'ID'],
@@ -47,6 +42,7 @@ async function fetchStudents() {
   }
 }
 
+/** Staff only (ADMIN, LECTURER): the backend rejects students with 403. */
 export default function StudentsPage() {
   const [students, setStudents] = useState([])
   const [total, setTotal] = useState(0)
@@ -78,48 +74,19 @@ export default function StudentsPage() {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.55)), url(${background})`,
-        backgroundSize: 'cover',
-        backgroundAttachment: 'fixed',
-      }}
-    >
-      <AppBar position="static" color="transparent" elevation={0} sx={{ color: 'common.white' }}>
-        <Toolbar sx={{ gap: 1 }}>
-          <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, fontWeight: 700 }}>
-            Student Manager
-          </Typography>
-          {/* Text buttons on wider screens, icon-only buttons on phones */}
-          <Button color="inherit" startIcon={<RefreshIcon />} onClick={refresh} disabled={loading}
-                  sx={{ display: { xs: 'none', sm: 'inline-flex' } }}>
-            Refresh
-          </Button>
-          <IconButton color="inherit" aria-label="Refresh" onClick={refresh} disabled={loading}
-                      sx={{ display: { sm: 'none' } }}>
-            <RefreshIcon />
-          </IconButton>
-          <Button color="inherit" startIcon={<LogoutIcon />} component={RouterLink} to="/login"
-                  sx={{ display: { xs: 'none', sm: 'inline-flex' } }}>
-            Log out
-          </Button>
-          <IconButton color="inherit" aria-label="Log out" component={RouterLink} to="/login"
-                      sx={{ display: { sm: 'none' } }}>
-            <LogoutIcon />
-          </IconButton>
-        </Toolbar>
-      </AppBar>
-
+    <AppShell>
       <Container maxWidth="lg" sx={{ py: 3 }}>
         <Paper elevation={8} sx={{ overflow: 'hidden' }}>
-          <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'baseline', gap: 1 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Registered students</Typography>
+          <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="subtitle1" component="h1" sx={{ fontWeight: 700 }}>Registered students</Typography>
             {!loading && !error && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
                 {total > students.length ? `showing ${students.length} of ${total}` : `${total} total`}
               </Typography>
             )}
+            <Button size="small" startIcon={<RefreshIcon />} onClick={refresh} disabled={loading} sx={{ ml: 'auto' }}>
+              Refresh
+            </Button>
           </Box>
           {loading ? <LinearProgress /> : <Box sx={{ height: 4 }} />}
 
@@ -162,6 +129,6 @@ export default function StudentsPage() {
           </TableContainer>
         </Paper>
       </Container>
-    </Box>
+    </AppShell>
   )
 }

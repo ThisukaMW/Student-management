@@ -13,7 +13,7 @@ import RadioGroup from '@mui/material/RadioGroup'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import { errorMessageOf, fieldErrorsOf, registerStudent, SERVER_UNREACHABLE } from '../api/client.js'
+import { errorMessageOf, fieldErrorsOf, register, SERVER_UNREACHABLE } from '../api/client.js'
 import AuthLayout from '../components/AuthLayout.jsx'
 import PasswordField from '../components/PasswordField.jsx'
 import background from '../assets/top-view-business-office-desk-background-applying-job-form-pen-pencil-eyeglasses-tree-mobile-phone-wooden-table-background-with-copy-space.jpg'
@@ -51,7 +51,7 @@ export default function RegisterPage() {
     setFieldErrors({})
     try {
       const age = form.age.trim()
-      const result = await registerStudent({
+      const result = await register({
         ...form,
         age: age === '' ? null : Number(age),
         gender: form.gender || null,
@@ -105,7 +105,7 @@ export default function RegisterPage() {
             label="Password"
             autoComplete="new-password"
             {...field('password')}
-            helperText={fieldErrors.password ?? 'At least 8 characters'}
+            helperText={fieldErrors.password ?? 'At least 8 characters, with a letter and a digit'}
           />
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

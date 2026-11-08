@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router'
+import { Link as RouterLink, useLocation } from 'react-router'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -7,22 +7,36 @@ import Link from '@mui/material/Link'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import { errorMessageOf, fieldErrorsOf, login, SERVER_UNREACHABLE } from '../api/client.js'
+import { errorMessageOf, fieldErrorsOf, SERVER_UNREACHABLE } from '../api/client.js'
+import { useAuth } from '../auth/useAuth.js'
 import AuthLayout from '../components/AuthLayout.jsx'
 import PasswordField from '../components/PasswordField.jsx'
 import background from '../assets/pexels-tirachard-kumtanom-733857.jpg'
 import avatar from '../assets/undraw_male_avatar_g98d.svg'
 
-export default function LoginPage() {
-  const navigate = useNavigate()
-  // Set by the register page after a successful sign-up
-  const registeredEmail = useLocation().state?.registeredEmail
+// Why the user landed here, shown above the form
+function noticeFor(state, ended) {
+  if (state?.registeredEmail) return { severity: 'success', text: 'Registration successful. You can now log in.' }
+  if (ended?.reason === 'passwordChanged') {
+    return { severity: 'success', text: 'Password changed. Please log in with your new password.' }
+  }
+  if (ended?.reason === 'expired') return { severity: 'warning', text: 'Your session has expired. Please log in again.' }
+  if (ended?.reason === 'loggedOut') return { severity: 'info', text: 'You have been logged out.' }
+  if (state?.from) return { severity: 'info', text: 'Please log in to continue.' }
+  return null
+}
 
-  const [email, setEmail] = useState(registeredEmail ?? '')
+export default function LoginPage() {
+  const { state } = useLocation()
+  const auth = useAuth()
+  const prefilledEmail = state?.registeredEmail ?? auth.ended?.email
+
+  const [email, setEmail] = useState(prefilledEmail ?? '')
   const [password, setPassword] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const notice = noticeFor(state, auth.ended)
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -30,11 +44,9 @@ export default function LoginPage() {
     setError(null)
     setFieldErrors({})
     try {
-      const result = await login(email, password)
-      if (result.ok) {
-        navigate('/students')
-        return
-      }
+      const result = await auth.login(email, password)
+      // On success PublicOnly redirects (to the page they tried to open, or their home page)
+      if (result.ok) return
       if (result.status === 401) {
         setError('Incorrect email or password')
       } else {
@@ -52,9 +64,7 @@ export default function LoginPage() {
     <AuthLayout background={background} illustration={avatar} title="Welcome back" subtitle="Student Management System">
       <Box component="form" onSubmit={handleSubmit} noValidate>
         <Stack spacing={2}>
-          {registeredEmail && !error && (
-            <Alert severity="success">Registration successful. You can now log in.</Alert>
-          )}
+          {notice && !error && <Alert severity={notice.severity}>{notice.text}</Alert>}
           {error && <Alert severity="error">{error}</Alert>}
 
           <TextField
@@ -62,7 +72,7 @@ export default function LoginPage() {
             label="Email"
             type="email"
             autoComplete="email"
-            autoFocus={!registeredEmail}
+            autoFocus={!prefilledEmail}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             error={Boolean(fieldErrors.email)}
@@ -72,7 +82,7 @@ export default function LoginPage() {
             id="login-password"
             label="Password"
             autoComplete="current-password"
-            autoFocus={Boolean(registeredEmail)}
+            autoFocus={Boolean(prefilledEmail)}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             error={Boolean(fieldErrors.password)}
